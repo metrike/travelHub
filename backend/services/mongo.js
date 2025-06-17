@@ -1,9 +1,7 @@
 import mongoose from 'mongoose';
 
-mongoose.connect('mongodb://mongo:27017/projet', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
+mongoose.connect('mongodb://mongo:27017/projet');
+
 
 const db = mongoose.connection;
 
