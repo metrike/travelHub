@@ -1,0 +1,73 @@
+[
+  {
+    "from": "Paris",
+    "to": "Tokyo",
+    "departDate": "2025-07-01T00:00:00Z",
+    "returnDate": "2025-07-15T00:00:00Z",
+    "provider": "AirZen",
+    "price": 750.0,
+    "currency": "EUR",
+    "legs": [
+      {
+        "flightNum": "AZ123",
+        "dep": "CDG",
+        "arr": "NRT",
+        "duration": 720
+      }
+    ],
+    "hotel": {
+      "name": "Hotel Fuji",
+      "nights": 5,
+      "price": 500
+    },
+    "activity": {
+      "title": "Mont Fuji Tour",
+      "price": 120
+    }
+  },
+  {
+    "from": "New York",
+    "to": "Paris",
+    "departDate": "2025-08-10T00:00:00Z",
+    "returnDate": "2025-08-20T00:00:00Z",
+    "provider": "FlyDirect",
+    "price": 650.0,
+    "currency": "EUR",
+    "legs": [
+      {
+        "flightNum": "FD456",
+        "dep": "JFK",
+        "arr": "CDG",
+        "duration": 420
+      }
+    ],
+    "hotel": {
+      "name": "Hôtel Parisien",
+      "nights": 4,
+      "price": 400
+    },
+    "activity": {
+      "title": "Tour Eiffel + Croisière",
+      "price": 75
+    }
+  },
+  {
+    "from": "London",
+    "to": "Rome",
+    "departDate": "2025-09-05T00:00:00Z",
+    "returnDate": "2025-09-12T00:00:00Z",
+    "provider": "EuroFly",
+    "price": 300.0,
+    "currency": "EUR",
+    "legs": [
+      {
+        "flightNum": "EF789",
+        "dep": "LHR",
+        "arr": "FCO",
+        "duration": 150
+      }
+    ],
+    "hotel": null,
+    "activity": null
+  }
+]
