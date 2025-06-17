@@ -21,7 +21,7 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j/test
+      - NEO4J_AUTH=neo4j/supersecure123   # ✅ minimum 8 caractères
     volumes:
       - neo4j-data:/data
     restart: unless-stopped

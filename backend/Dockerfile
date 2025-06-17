@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8000
 
 # Étape 7 : Lancer le serveur
-CMD ["node", "src/index.js"]
+CMD ["node", "index.js"]
