@@ -1,111 +1,67 @@
-// initdb/init.js
 db = db.getSiblingDB('projet');
 
-db.users.insertMany([
+db.offers.insertMany([
     {
-        "userId": "u42",
-        "name": "Alice Dupont",
-        "email": "alice.dupont@example.com",
-        "homeCity": "Paris",
-        "preferredDestinations": ["Tokyo", "New York", "Rome"]
+        "from": "PAR",
+        "to": "NYC",
+        "departDate": ISODate("2025-08-05T00:00:00Z"),
+        "returnDate": ISODate("2025-08-15T00:00:00Z"),
+        "provider": "GlobeFly",
+        "price": 700,
+        "currency": "EUR",
+        "legs": [{ "flightNum": "GF101", "dep": "CDG", "arr": "JFK", "duration": 480 }],
+        "hotel": { "name": "Midtown Hotel", "nights": 5, "price": 450 },
+        "activity": { "title": "Statue de la Liberté", "price": 80 }
     },
     {
-        "userId": "u17",
-        "name": "Marc Tremblay",
-        "email": "marc.tremblay@example.com",
-        "homeCity": "Montreal",
-        "preferredDestinations": ["Paris", "London"]
+        "from": "MAD",
+        "to": "BER",
+        "departDate": ISODate("2025-07-10T00:00:00Z"),
+        "returnDate": ISODate("2025-07-18T00:00:00Z"),
+        "provider": "IberBerlin",
+        "price": 200,
+        "currency": "EUR",
+        "legs": [{ "flightNum": "IB202", "dep": "MAD", "arr": "BER", "duration": 180 }],
+        "hotel": { "name": "Berlin Plaza", "nights": 4, "price": 320 },
+        "activity": { "title": "Visite du Reichstag", "price": 30 }
     },
     {
-        "userId": "u99",
-        "name": "Emma Rossi",
-        "email": "emma.rossi@example.com",
-        "homeCity": "Rome",
-        "preferredDestinations": ["Tokyo", "New York", "London"]
+        "from": "ROM",
+        "to": "CAS",
+        "departDate": ISODate("2025-09-01T00:00:00Z"),
+        "returnDate": ISODate("2025-09-10T00:00:00Z"),
+        "provider": "RomaAir",
+        "price": 260,
+        "currency": "EUR",
+        "legs": [{ "flightNum": "RA333", "dep": "FCO", "arr": "CMN", "duration": 210 }],
+        "hotel": { "name": "Casablanca Hotel", "nights": 6, "price": 370 },
+        "activity": { "title": "Medina Tour", "price": 40 }
     },
     {
-        "userId": "u01",
-        "name": "John Smith",
-        "email": "john.smith@example.com",
-        "homeCity": "New York",
-        "preferredDestinations": ["Paris", "Rome", "Tokyo"]
+        "from": "LON",
+        "to": "NYC",
+        "departDate": ISODate("2025-10-12T00:00:00Z"),
+        "returnDate": ISODate("2025-10-22T00:00:00Z"),
+        "provider": "BritishJet",
+        "price": 720,
+        "currency": "EUR",
+        "legs": [{ "flightNum": "BJ420", "dep": "LHR", "arr": "JFK", "duration": 500 }],
+        "hotel": { "name": "Times Square Inn", "nights": 7, "price": 600 },
+        "activity": { "title": "Broadway Show", "price": 90 }
     },
     {
-        "userId": "u02",
-        "name": "Sophie Müller",
-        "email": "sophie.mueller@example.com",
-        "homeCity": "Berlin",
-        "preferredDestinations": ["Madrid", "Paris", "Rome"]
-    },
-    {
-        "userId": "u03",
-        "name": "Carlos Martinez",
-        "email": "carlos.martinez@example.com",
-        "homeCity": "Madrid",
-        "preferredDestinations": ["Berlin", "London", "New York"]
-    },
-    {
-        "userId": "u04",
-        "name": "Yuki Tanaka",
-        "email": "yuki.tanaka@example.com",
-        "homeCity": "Tokyo",
-        "preferredDestinations": ["Paris", "Rome", "New York"]
-    },
-    {
-        "userId": "u05",
-        "name": "Fatima Zahra",
-        "email": "fatima.zahra@example.com",
-        "homeCity": "Casablanca",
-        "preferredDestinations": ["Madrid", "Paris", "Berlin"]
+        "from": "TYO",
+        "to": "PAR",
+        "departDate": ISODate("2025-11-03T00:00:00Z"),
+        "returnDate": ISODate("2025-11-13T00:00:00Z"),
+        "provider": "TokyoAir",
+        "price": 830,
+        "currency": "EUR",
+        "legs": [{ "flightNum": "TA777", "dep": "NRT", "arr": "CDG", "duration": 720 }],
+        "hotel": { "name": "Hôtel Louvre", "nights": 5, "price": 520 },
+        "activity": { "title": "Musée du Louvre", "price": 50 }
     }
 ]);
 
-
-db.offer.insertMany([
-    {
-        "from": "PAR",
-        "to": "TYO",
-        "departDate": "2025-07-01T00:00:00Z",
-        "returnDate": "2025-07-15T00:00:00Z",
-        "provider": "AirZen",
-        "price": 750.00,
-        "currency": "EUR",
-        "legs": [
-            { "flightNum": "AZ123", "dep": "CDG", "arr": "NRT", "duration": 720 }
-        ],
-        "hotel": { "name": "Hotel Fuji", "nights": 5, "price": 500 },
-        "activity": { "title": "Visite Mont Fuji", "price": 120 }
-    },
-    {
-        "from": "NYC",
-        "to": "PAR",
-        "departDate": "2025-08-10T00:00:00Z",
-        "returnDate": "2025-08-20T00:00:00Z",
-        "provider": "FlyDirect",
-        "price": 650,
-        "currency": "EUR",
-        "legs": [
-            { "flightNum": "FD321", "dep": "JFK", "arr": "CDG", "duration": 480 }
-        ],
-        "hotel": { "name": "Hôtel Parisien", "nights": 4, "price": 400 },
-        "activity": { "title": "Tour Eiffel + Croisière", "price": 75 }
-    },
-    {
-        "from": "LON", "to": "ROM", "departDate": "2025-09-05T00:00:00Z", "returnDate": "2025-09-12T00:00:00Z",
-        "provider": "EuroFly", "price": 300, "currency": "EUR",
-        "legs": [{ "flightNum": "EF987", "dep": "LHR", "arr": "FCO", "duration": 150 }],
-        "hotel": null, "activity": null
-    },
-    {
-        "from": "BER", "to": "BCN", "departDate": "2025-06-01T00:00:00Z", "returnDate": "2025-06-07T00:00:00Z",
-        "provider": "SunnyTrips", "price": 220, "currency": "EUR",
-        "legs": [{ "flightNum": "ST124", "dep": "TXL", "arr": "BCN", "duration": 160 }],
-        "hotel": { "name": "Barcelona Inn", "nights": 6, "price": 390 },
-        "activity": { "title": "Sagrada Familia Tour", "price": 45 }
-    },
-    // ➕ tu peux continuer avec tous les autres documents identiques, **mais sans les crochets autour du tableau**
-]);
-
-
-db.offer.createIndex({ from: 1, to: 1, price: 1 });
-db.offer.createIndex({ provider: "text" });
+db.offers.createIndex({ from: 1, to: 1, price: 1 });
+db.offers.createIndex({ provider: "text" });
