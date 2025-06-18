@@ -4,8 +4,9 @@ import mongoose from './services/mongo.js';
 import authRoute from './routes/auth.js';
 import offersRoute from './routes/offers.js';
 import recoRoute from './routes/reco.js';
-import './init-neo4j.js'; // ou le bon chemin
-
+import './init-neo4j.js';
+import statsRoute from './routes/stats.js';
+import metricsRouter from './routes/metrics.js';
 const app = express();
 
 app.use(cors());
@@ -43,6 +44,9 @@ const startServer = async () => {
 app.use('/login', authRoute);
 app.use('/offers', offersRoute);
 app.use('/reco', recoRoute);
+
+app.use('/stats', statsRoute);
+app.use('/metrics', metricsRouter); // ⬅️ Ajout ici
 
 
 startServer();
