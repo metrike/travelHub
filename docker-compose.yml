@@ -17,24 +17,32 @@ services:
     restart: unless-stopped
 
   neo4j:
-    image: neo4j
+    image: neo4j:5.18
     ports:
       - "7474:7474"
       - "7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j/supersecure123   # ✅ minimum 8 caractères
+      - NEO4J_AUTH=neo4j/supersecure123
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
     volumes:
       - neo4j-data:/data
     restart: unless-stopped
 
+
   api:
-    build: ./backend   # ⚠️ assure-toi que ton dossier backend existe ici
+    build: ./backend
     ports:
       - "8000:8000"
     depends_on:
       - mongo
       - redis
       - neo4j
+    command: >
+      sh -c "sleep 10 && node index.js"
+    volumes:
+      - ./backend:/app
     restart: unless-stopped
 
 volumes:

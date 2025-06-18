@@ -7,12 +7,14 @@ import neo4jDriver from '../services/neo4j.js';
 
 const router = express.Router();
 
-// ✅ Route de test simple
 router.get('/test', (req, res) => {
+    const Offer = mongoose.model('Offer');
+    Offer.find().then(console.log)
     res.json({ message: "Route test OK" });
 });
 
-// ✅ Route principale
+
+
 router.get('/', async (req, res) => {
     const { from, to, limit = 10 } = req.query;
 
@@ -42,7 +44,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// ✅ Route par ID avec Neo4j
 router.get('/:id', async (req, res) => {
     const offerId = req.params.id;
     const redisKey = `offers:${offerId}`;
@@ -57,7 +58,6 @@ router.get('/:id', async (req, res) => {
 
         const Offer = mongoose.model('Offer');
         const offer = await Offer.findById(offerId).lean();
-        Offer.find().then(console.log)
         if (!offer) return res.status(404).json({ error: 'Offer not found' });
 
         const session = neo4jDriver.session();
@@ -84,5 +84,4 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// ✅ Export obligatoire en ESModule
 export default router;
