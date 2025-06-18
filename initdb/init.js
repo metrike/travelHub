@@ -60,7 +60,8 @@ db.users.insertMany([
     }
 ]);
 
-db.travel.insertMany([
+
+db.offer.insertMany([
     {
         "from": "PAR",
         "to": "TYO",
@@ -104,3 +105,7 @@ db.travel.insertMany([
     },
     // ➕ tu peux continuer avec tous les autres documents identiques, **mais sans les crochets autour du tableau**
 ]);
+
+
+db.offer.createIndex({ from: 1, to: 1, price: 1 });
+db.offer.createIndex({ provider: "text" });
