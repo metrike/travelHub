@@ -7,9 +7,19 @@ import Offer from '../models/offer.js';
  * @param {String} to     – code IATA d’arrivée (ex. "TYO")
  * @param {Number} limit  – nombre maximal de documents à renvoyer
  */
-export const getOffersFromMongo = (from, to, limit) => {
-    return Offer.find({ from, to })
-        .sort({ price: 1 })
+export async function getOffersFromMongo(from, to, limit = 10, q = '') {
+    const filter = {
+        from,
+        to,
+    };
+
+    if (q && q.trim()) {
+        filter.$text = { $search: q };
+    }
+
+    return Offer.find(filter)
+        .sort(q ? {score: {$meta: "textScore"}} : {})
         .limit(limit)
-        .lean();         // on renvoie directement des JSON “plats”
-};
+        .lean();
+}
+
