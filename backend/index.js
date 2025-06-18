@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from './services/mongo.js';
-import offersRoute from './routes/offers.js'; // ← même casse
+import authRoute from './routes/auth.js';
+import offersRoute from './routes/offers.js';
 import recoRoute from './routes/reco.js';
 import './init-neo4j.js'; // ou le bon chemin
 
@@ -39,7 +40,9 @@ const startServer = async () => {
     }
 };
 
+app.use('/login', authRoute);
 app.use('/offers', offersRoute);
 app.use('/reco', recoRoute);
+
 
 startServer();

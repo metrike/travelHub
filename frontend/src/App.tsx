@@ -5,6 +5,7 @@ import './App.css'
 import { Routes, Route } from "react-router-dom"
 import Offers from "./Offers.tsx";
 import OfferDetail from "./OfferDetail.tsx";
+import Login from "./Login.tsx";
 
 
 function App() {
@@ -13,8 +14,9 @@ function App() {
   return (
     <>
       <Routes>
-          <Route path="/" element={<Offers/>}/>
-          <Route path="/offers/:id" element={<OfferDetail />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Offers />} />
+        <Route path="/offers/:id" element={<OfferDetail />} />
       </Routes>
     </>
   )

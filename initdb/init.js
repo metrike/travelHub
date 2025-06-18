@@ -65,3 +65,12 @@ db.offers.insertMany([
 
 db.offers.createIndex({ from: 1, to: 1, price: 1 });
 db.offers.createIndex({ provider: "text" });
+
+db.users.drop();
+db.users.insertMany([
+  { userId: 'u1',   name: 'Alice',   roles: ['user'] },
+  { userId: 'u42',  name: 'Bob',     roles: ['user','admin'] },
+  { userId: 'u123', name: 'Charlie', roles: ['user'] }
+]);
+
+console.log('✅ Initialisation de la base de données terminée.');

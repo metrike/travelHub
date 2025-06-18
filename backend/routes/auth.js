@@ -4,6 +4,10 @@ import redis from '../services/redis.js';
 
 const router = express.Router();
 
+router.get('/', (req, res) => {
+  res.json({ ok: 'GET /login is wired up' });
+});
+
 // POST /login
 router.post('/', async (req, res) => {
   const { userId } = req.body;
