@@ -11,7 +11,7 @@ const runInit = async () => {
     try {
         console.log('🚀 Inserting cities and NEAR relations in Neo4j...');
 
-        await session.writeTransaction(tx =>
+        await session.executeWrite(tx =>
             tx.run(`
         MERGE (par:City {code: 'PAR'})
         MERGE (tyo:City {code: 'TYO'})
