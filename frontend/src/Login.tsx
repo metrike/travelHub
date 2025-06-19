@@ -24,7 +24,7 @@ export default function Login() {
 
       const { token } = await res.json();
       localStorage.setItem('token', token);
-      navigate('/');
+      navigate('/offers');
     } catch {
       setError('Network error');
     }

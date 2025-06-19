@@ -15,13 +15,13 @@ function App() {
   return (
     <>
       <nav className="bg-zinc-800 text-zinc-100 px-6 py-3 flex gap-6">
-        <Link to="/" className="hover:underline">Offres</Link>
+        <Link to="/offers" className="hover:underline">Offres</Link>
         <Link to="/stats" className="hover:underline">Stats</Link>
       </nav>
 
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Offers />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/offers" element={<Offers />} />
         <Route path="/offers/:id" element={<OfferDetail />} />
         <Route path="/stats" element={<TopDestinations />} />
 
