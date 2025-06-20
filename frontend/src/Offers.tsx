@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type Offer from '../type/offer';
-
-const CODES = ['PAR','TYO','NYC','ROM','BER','MAD','LON','YUL','CAS','AMS','FRA','LIS','IST'];
+import CodesDataList from './CodesDataList'; // 🔄 on déplace le datalist ici
 
 export default function Offers() {
     const [offers,   setOffers]   = useState<Offer[]>([]);
     const [from,     setFrom]     = useState('');
     const [to,       setTo]       = useState('');
-    const [query,    setQuery]    = useState('');          // ⬅️ filtre texte
+    const [query,    setQuery]    = useState('');
     const [loading,  setLoading]  = useState(false);
 
-    /* -------------------- Fetch -------------------- */
     useEffect(() => {
         if (from.length !== 3 || to.length !== 3) {
             setOffers([]);
@@ -25,7 +23,7 @@ export default function Offers() {
                     from,
                     to,
                     limit: '10',
-                    ...(query.trim() && { q: query.trim() })   // n’ajoute q= que si non vide
+                    ...(query.trim() && { q: query.trim() })
                 });
 
                 const res  = await fetch(`http://localhost:8000/offers?${params.toString()}`);
@@ -59,12 +57,12 @@ export default function Offers() {
                     </div>
 
                     <input className="p-3 rounded bg-zinc-800 border border-zinc-600"
-                           placeholder="Filtre texte (hôtel, activité, provider…) "
+                           placeholder="Filtre texte (hôtel, activité, provider…)"
                            value={query}
-                           onChange={e => setQuery(e.target.value)}/>
+                           onChange={e => setQuery(e.target.value)} />
                 </div>
 
-                <datalist id="codes">{CODES.map(c => <option key={c} value={c}/>)}</datalist>
+                <CodesDataList />
 
                 {loading ? (
                     <p className="text-center text-zinc-400">Chargement…</p>

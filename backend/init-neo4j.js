@@ -24,9 +24,9 @@ const runInit = async () => {
       `)
         );
 
-        console.log('✅ Neo4j init done.');
+        console.log('Neo4j init done.');
     } catch (err) {
-        console.error('❌ Neo4j init error:', err);
+        console.error('Neo4j init error:', err);
     } finally {
         await session.close();
         await driver.close();

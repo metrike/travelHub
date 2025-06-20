@@ -13,30 +13,30 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/ping', (req, res) => {
-    console.log('🏓 Ping received');
+    console.log('Ping received');
     res.send('pong');
 });
 
 mongoose.connection.on('error', (err) => {
-    console.error('❌ MongoDB connection error:', err.message);
+    console.error(' MongoDB connection error:', err.message);
 });
 
 mongoose.connection.on('connected', () => {
-    console.log('📡 MongoDB connected (waiting to be ready)');
+    console.log('MongoDB connected (waiting to be ready)');
 });
 
 const startServer = async () => {
     try {
-        console.log('⏳ Waiting for MongoDB to be ready...');
+        console.log('Waiting for MongoDB to be ready...');
         await mongoose.connection.asPromise();
-        console.log('🚀 All services ready - Starting Express...');
+        console.log('All services ready - Starting Express...');
         app.listen(8000, '0.0.0.0', () => {
-            console.log('✅ API server listening on port 8000');
-            console.log('🔗 Test with: curl http://localhost:8000/ping');
+            console.log('API server listening on port 8000');
+            console.log('Test with: curl http://localhost:8000/ping');
         });
 
     } catch (err) {
-        console.error('💥 Failed to start server:', err);
+        console.error('Failed to start server:', err);
         process.exit(1);
     }
 };

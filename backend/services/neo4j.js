@@ -16,9 +16,9 @@ try {
     );
 
     await driver.getServerInfo();
-    console.log('✅ Connected to Neo4j');
+    console.log('Connected to Neo4j');
 } catch (err) {
-    console.error('❌ Failed to connect to Neo4j:', err);
+    console.error('Failed to connect to Neo4j:', err);
     process.exit(1);
 }
 

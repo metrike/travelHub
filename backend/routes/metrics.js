@@ -1,4 +1,3 @@
-// routes/metrics.js
 import express from 'express';
 import { register } from '../services/metrics.js';
 

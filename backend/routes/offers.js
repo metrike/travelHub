@@ -1,11 +1,9 @@
-/* ────────────────────────────── DEPENDANCES ────────────────────────────── */
 import express  from 'express';
 import zlib     from 'zlib';
 import redis    from '../services/redis.js';
 import neo4j    from '../services/neo4j.js';
 import Offer    from '../models/offer.js';
 
-/* ▸ métriques Prometheus */
 import {
     httpRequestDuration,
     cacheHitCounter,
@@ -14,7 +12,6 @@ import {
 
 const router = express.Router();
 
-/* Helper pour mesurer la latence d’un handler */
 const withMetrics = (route, handler) => async (req, res, next) => {
     const end = httpRequestDuration.startTimer({ route, method: req.method });
     try {
@@ -61,13 +58,10 @@ router.get(
     withMetrics('/offers', async (req, res) => {
         const { from, to, limit = 10, q = '' } = req.query;
 
-        /* 1 ─ Validation simple */
         if (!from?.trim() || !to?.trim()) return res.json([]);
 
-        /* 2 ─ Clé de cache (on normalise q en minuscules) */
         const cacheKey = `offers:${from}:${to}:q:${q.toLowerCase()}`;
 
-        /* 3 ─ Tentative de cache */
         const cached = await redis.get(cacheKey);
         if (cached) {
             cacheHitCounter.inc();
@@ -78,7 +72,6 @@ router.get(
         }
         cacheMissCounter.inc();
 
-        /* 4 ─ Filtre MongoDB + éventuel texte libre */
         const filter = { from, to };
         if (q.trim()) {
             const regex = new RegExp(q, 'i');
@@ -89,13 +82,11 @@ router.get(
             ];
         }
 
-        /* 5 ─ Query + tri */
         const offers = await Offer.find(filter)
             .sort({ price: 1 })
             .limit(Number(limit))
             .lean();
 
-        /* 6 ─ On compresse et on met 60 s en cache */
         await redis.setEx(
             cacheKey,
             60,

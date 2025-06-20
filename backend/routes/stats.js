@@ -4,14 +4,6 @@ import Offer   from '../models/offer.js';
 
 const router = express.Router();
 
-/**
- * GET /stats/top-destinations?limit=5
- * ➜ [
- *      { city: "NYC", count: 12, avgPrice: 615.5 },
- *      { city: "PAR", count: 9,  avgPrice: 740.2 },
- *      …
- *   ]
- */
 router.get('/top-destinations', async (req, res) => {
     const limit = Number(req.query.limit) || 5;
     const cacheKey = `stats:top:${limit}`;
@@ -48,7 +40,7 @@ router.get('/top-destinations', async (req, res) => {
 
         res.json(stats);
     } catch (err) {
-        console.error('❌ GET /stats/top-destinations:', err);
+        console.error('GET /stats/top-destinations:', err);
         res.status(500).json({ error: err.message });
     }
 });
