@@ -27,7 +27,7 @@ export default function OfferDetail() {
 
     return (
         <div className="p-8 max-w-3xl mx-auto space-y-6">
-            <Link to="/" className="text-blue-600 hover:underline">&larr; Retour</Link>
+            <Link to="/offers" className="text-blue-600 hover:underline">&larr; Retour</Link>
 
             <h1 className="text-2xl font-bold">
                 {offer.from} &rarr; {offer.to}
