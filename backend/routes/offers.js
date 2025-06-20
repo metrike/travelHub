@@ -1,9 +1,11 @@
+/* ────────────────────────────── DEPENDANCES ────────────────────────────── */
 import express  from 'express';
 import zlib     from 'zlib';
 import redis    from '../services/redis.js';
 import neo4j    from '../services/neo4j.js';
 import Offer    from '../models/offer.js';
 
+/* ▸ métriques Prometheus */
 import {
     httpRequestDuration,
     cacheHitCounter,
@@ -12,6 +14,7 @@ import {
 
 const router = express.Router();
 
+/* Helper pour mesurer la latence d’un handler */
 const withMetrics = (route, handler) => async (req, res, next) => {
     const end = httpRequestDuration.startTimer({ route, method: req.method });
     try {
@@ -58,26 +61,24 @@ router.get(
     withMetrics('/offers', async (req, res) => {
         const { from, to, limit = 10, q = '' } = req.query;
 
-        if (!from?.trim() || !to?.trim()) {
-            return res.status(400).json({ error: 'Missing "from" or "to" parameters' });
-        }
+        /* 1 ─ Validation simple */
+        if (!from?.trim() || !to?.trim()) return res.json([]);
 
+        /* 2 ─ Clé de cache (on normalise q en minuscules) */
         const cacheKey = `offers:${from}:${to}:q:${q.toLowerCase()}`;
 
-        try {
-            const cached = await redis.get(cacheKey);
-            if (cached) {
-                cacheHitCounter.inc();
-                console.log(`[CACHE HIT] ${cacheKey}`);
-                return res.json(
-                    JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64')))
-                );
-            }
-        } catch (err) {
-            console.warn('Redis GET error:', err.message);
+        /* 3 ─ Tentative de cache */
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            cacheHitCounter.inc();
+            console.log(`[CACHE HIT] ${cacheKey}`);
+            return res.json(
+                JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64')))
+            );
         }
         cacheMissCounter.inc();
 
+        /* 4 ─ Filtre MongoDB + éventuel texte libre */
         const filter = { from, to };
         if (q.trim()) {
             const regex = new RegExp(q, 'i');
@@ -88,78 +89,70 @@ router.get(
             ];
         }
 
+        /* 5 ─ Query + tri */
         const offers = await Offer.find(filter)
             .sort({ price: 1 })
             .limit(Number(limit))
             .lean();
 
-        try {
-            await redis.setEx(
-                cacheKey,
-                60,
-                zlib.gzipSync(JSON.stringify(offers)).toString('base64')
-            );
-        } catch (err) {
-            console.warn('Redis SET error:', err.message);
-        }
+        /* 6 ─ On compresse et on met 60 s en cache */
+        await redis.setEx(
+            cacheKey,
+            60,
+            zlib.gzipSync(JSON.stringify(offers)).toString('base64')
+        );
 
         res.json(offers);
     })
 );
 
-/* ───────────── Détail + suggestions (GET /offers/:id) ───────────── */
-router.get('/:id', withMetrics('/offers/:id', async (req, res) => {
-    const redisKey = `offers:${req.params.id}`;
+/* ─────────────── Détails + suggestions (GET /offers/:id) ──────────────── */
+router.get(
+    '/:id',
+    withMetrics('/offers/:id', async (req, res) => {
+        const redisKey = `offers:${req.params.id}`;
 
-    /* Cache Redis */
-    const cached = await redis.get(redisKey);
-    if (cached) {
-        cacheHitCounter.inc();
-        return res.json(JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64'))));
-    }
-    cacheMissCounter.inc();
+        /* Cache */
+        const cached = await redis.get(redisKey);
+        if (cached) {
+            cacheHitCounter.inc();
+            console.log(`[CACHE HIT] ${redisKey}`);
+            return res.json(
+                JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64')))
+            );
+        }
+        cacheMissCounter.inc();
 
-    /* Offre principale */
-    const offer = await Offer.findById(req.params.id).lean();
-    if (!offer) return res.status(404).json({ error: 'Offer not found' });
+        /* Mongo */
+        const offer = await Offer.findById(req.params.id).lean();
+        if (!offer) return res.status(404).json({ error: 'Offer not found' });
 
-    /* Villes de départ proches (Neo4j) */
-    const session = neo4j.session();
-    const result  = await session.run(
-        `MATCH (c:City {code:$city})-[:NEAR]->(n) RETURN n.code AS city LIMIT 3`,
-        { city: offer.from }
-    );
-    await session.close();
-    const nearbyCities = result.records.map(r => r.get('city'));
+        /* Reco Neo4j */
+        const session = neo4j.session();
+        const cypher  = `
+      MATCH (c:City {code: $city})-[:NEAR]->(n:City)
+      RETURN n.code AS city ORDER BY n.weight DESC LIMIT 3
+    `;
+        const result = await session.run(cypher, { city: offer.from });
+        await session.close();
 
-    /* Fenêtre ±10 jours autour de la date de départ */
-    const start = new Date(offer.departDate); start.setDate(start.getDate() - 10);
-    const end   = new Date(offer.departDate); end.setDate(end.getDate() + 10);
+        const nearbyCities = result.records.map(r => r.get('city'));
+        const related = await Offer.find({ from: { $in: nearbyCities } })
+            .limit(3)
+            .select('_id')
+            .lean();
 
-    /* Recherche d’offres vraiment similaires */
-    const related = await Offer.find({
-        from:      { $in: nearbyCities },
-        to:        offer.to,               // ✅ même destination (NYC)
-        _id:       { $ne: offer._id },     // ✅ pas soi-même
-        departDate:{ $gte: start, $lte: end } // ✅ dates proches
-    })
-        .sort({ price: 1 })
-        .limit(3)
-        .select('_id')
-        .lean();
+        offer.relatedOffers = related.map(o => o._id);
 
-    offer.relatedOffers = related.map(o => o._id);
+        /* Mise en cache 5 min */
+        await redis.setEx(
+            redisKey,
+            300,
+            zlib.gzipSync(JSON.stringify(offer)).toString('base64')
+        );
 
-    /* Cache 5 min */
-    await redis.setEx(
-        redisKey,
-        300,
-        zlib.gzipSync(JSON.stringify(offer)).toString('base64')
-    );
-
-    res.json(offer);
+        res.json(offer);
     })
 );
-
 
 export default router;
