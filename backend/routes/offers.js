@@ -58,17 +58,23 @@ router.get(
     withMetrics('/offers', async (req, res) => {
         const { from, to, limit = 10, q = '' } = req.query;
 
-        if (!from?.trim() || !to?.trim()) return res.json([]);
+        if (!from?.trim() || !to?.trim()) {
+            return res.status(400).json({ error: 'Missing "from" or "to" parameters' });
+        }
 
         const cacheKey = `offers:${from}:${to}:q:${q.toLowerCase()}`;
 
-        const cached = await redis.get(cacheKey);
-        if (cached) {
-            cacheHitCounter.inc();
-            console.log(`[CACHE HIT] ${cacheKey}`);
-            return res.json(
-                JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64')))
-            );
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                cacheHitCounter.inc();
+                console.log(`[CACHE HIT] ${cacheKey}`);
+                return res.json(
+                    JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64')))
+                );
+            }
+        } catch (err) {
+            console.warn('Redis GET error:', err.message);
         }
         cacheMissCounter.inc();
 
@@ -87,63 +93,73 @@ router.get(
             .limit(Number(limit))
             .lean();
 
-        await redis.setEx(
-            cacheKey,
-            60,
-            zlib.gzipSync(JSON.stringify(offers)).toString('base64')
-        );
+        try {
+            await redis.setEx(
+                cacheKey,
+                60,
+                zlib.gzipSync(JSON.stringify(offers)).toString('base64')
+            );
+        } catch (err) {
+            console.warn('Redis SET error:', err.message);
+        }
 
         res.json(offers);
     })
 );
 
-/* ─────────────── Détails + suggestions (GET /offers/:id) ──────────────── */
-router.get(
-    '/:id',
-    withMetrics('/offers/:id', async (req, res) => {
-        const redisKey = `offers:${req.params.id}`;
+/* ───────────── Détail + suggestions (GET /offers/:id) ───────────── */
+router.get('/:id', withMetrics('/offers/:id', async (req, res) => {
+    const redisKey = `offers:${req.params.id}`;
 
-        /* Cache */
-        const cached = await redis.get(redisKey);
-        if (cached) {
-            cacheHitCounter.inc();
-            console.log(`[CACHE HIT] ${redisKey}`);
-            return res.json(
-                JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64')))
-            );
-        }
-        cacheMissCounter.inc();
+    /* Cache Redis */
+    const cached = await redis.get(redisKey);
+    if (cached) {
+        cacheHitCounter.inc();
+        return res.json(JSON.parse(zlib.gunzipSync(Buffer.from(cached, 'base64'))));
+    }
+    cacheMissCounter.inc();
 
-        /* Mongo */
-        const offer = await Offer.findById(req.params.id).lean();
-        if (!offer) return res.status(404).json({ error: 'Offer not found' });
+    /* Offre principale */
+    const offer = await Offer.findById(req.params.id).lean();
+    if (!offer) return res.status(404).json({ error: 'Offer not found' });
 
-        /* Reco Neo4j */
-        const session = neo4j.session();
-        const cypher  = `
-      MATCH (c:City {code: $city})-[:NEAR]->(n:City)
-      RETURN n.code AS city ORDER BY n.weight DESC LIMIT 3
-    `;
-        const result = await session.run(cypher, { city: offer.from });
-        await session.close();
+    /* Villes de départ proches (Neo4j) */
+    const session = neo4j.session();
+    const result  = await session.run(
+        `MATCH (c:City {code:$city})-[:NEAR]->(n) RETURN n.code AS city LIMIT 3`,
+        { city: offer.from }
+    );
+    await session.close();
+    const nearbyCities = result.records.map(r => r.get('city'));
 
-        const nearbyCities = result.records.map(r => r.get('city'));
-        const related = await Offer.find({ from: { $in: nearbyCities } })
-            .limit(3)
-            .select('_id')
-            .lean();
+    /* Fenêtre ±10 jours autour de la date de départ */
+    const start = new Date(offer.departDate); start.setDate(start.getDate() - 10);
+    const end   = new Date(offer.departDate); end.setDate(end.getDate() + 10);
 
-        offer.relatedOffers = related.map(o => o._id);
+    /* Recherche d’offres vraiment similaires */
+    const related = await Offer.find({
+        from:      { $in: nearbyCities },
+        to:        offer.to,               // ✅ même destination (NYC)
+        _id:       { $ne: offer._id },     // ✅ pas soi-même
+        departDate:{ $gte: start, $lte: end } // ✅ dates proches
+    })
+        .sort({ price: 1 })
+        .limit(3)
+        .select('_id')
+        .lean();
 
-        /* Mise en cache 5 min */
-        await redis.setEx(
-            redisKey,
-            300,
-            zlib.gzipSync(JSON.stringify(offer)).toString('base64')
-        );
+    offer.relatedOffers = related.map(o => o._id);
 
-        res.json(offer);
+    /* Cache 5 min */
+    await redis.setEx(
+        redisKey,
+        300,
+        zlib.gzipSync(JSON.stringify(offer)).toString('base64')
+    );
+
+    res.json(offer);
     })
 );
+
 
 export default router;
